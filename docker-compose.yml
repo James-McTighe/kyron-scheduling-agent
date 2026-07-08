@@ -1,17 +1,13 @@
-# WARNING: this file is not suitable for production, please use with caution
-version: '3'
-
 services:
-  web:
+  backend:
     image: api
-    build: .
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     command: flask run -h 0.0.0.0
-    env_file:
-      - ./.flaskenv
     environment:
       - DATABASE_URI=sqlite:////db/api.db
     volumes:
-      - ./api:/code/api
-      - ./db/:/db/
+      - ./backend:/app
     ports:
       - "5000:5000"

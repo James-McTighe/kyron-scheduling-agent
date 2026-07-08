@@ -8,15 +8,13 @@
 # note that celery will require a running broker and result backend
 FROM python:3.8
 
-RUN mkdir /code
-WORKDIR /code
+WORKDIR /app
 
-COPY requirements.txt setup.py tox.ini ./
-RUN pip install -U pip
-RUN pip install -r requirements.txt
-RUN pip install -e .
+RUN apt-get update && apt-get install -y gcc libpq-dev && rm -rf /var/lib/apt/lists/*
 
-COPY api api/
-COPY migrations migrations/
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
 
 EXPOSE 5000
