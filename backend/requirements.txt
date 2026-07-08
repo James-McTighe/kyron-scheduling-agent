@@ -3,4 +3,5 @@ flask-restful
 flask-migrate
 flask-sqlalchemy
 Flask-SQLAlchemy
+gunicorn
 pytest
