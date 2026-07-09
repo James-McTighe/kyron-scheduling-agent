@@ -52,7 +52,7 @@ def get_slots():
     if not any([patient_id, body_part, issue_type]):
         return jsonify({"error": "Missing patient_id, body_part, or issue_type"}), 400
 
-    patient = Patient.query.get(patient_id)
+    patient = db.session.get(Patient, patient_id)
     if not patient:
         return jsonify({"error": "Patient not found"}), 404
 
@@ -81,7 +81,7 @@ def book_appointment():
     if not patient_id or not slot_id:
         return jsonify({"error": "Missing patient_id or slot_id"}), 400
 
-    slot = AvailabilitySlot.query.get(slot_id)
+    slot = db.session.get(AvailabilitySlot, slot_id)
     if not slot or slot.is_booked:
         return jsonify({"error": "Slot unavailable or does not exist"}), 400
 

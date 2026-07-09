@@ -122,7 +122,7 @@ def test_book_appointment_atomic_success(client, app):
 
     # Confirm the slot is now locked down and marked as booked
     with app.app_context():
-        slot = AvailabilitySlot.query.get(101)
+        slot = db.session.get(AvailabilitySlot, 101)
         assert slot.is_booked is True
 
 
