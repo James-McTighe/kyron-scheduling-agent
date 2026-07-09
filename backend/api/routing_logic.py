@@ -1,27 +1,33 @@
 from .models import Doctor, PhysicianProtocol, AvailabilitySlot, db
 
-def get_valid_slots(body_part: str, issue_type: str, is_new_patient: bool):
+
+def get_valid_slots(patient, body_part: str, issue_type: str, location=None):
     """
-    Queries slots based strictly on body part, issue type, and patient status constraints.
+    Queries slots based strictly on body part, issue type, location, and patient status constraints.
     """
-    # 1. Base query for unbooked slots matching the targeted body part
-    query = db.session.query(AvailabilitySlot).join(Doctor).join(PhysicianProtocol)
-    
-    query = query.filter(
+    matching_protocols = PhysicianProtocol.query.filter_by(
+        body_part=body_part, issue_type=issue_type
+    ).all()
+
+    if not matching_protocols:
+        return []
+
+    valid_doctor_ids = [p.doctor_id for p in matching_protocols]
+
+    slot_query = AvailabilitySlot.query.filter(
+        AvailabilitySlot.doctor_id.in_(valid_doctor_ids),
         AvailabilitySlot.is_booked == False,
-        PhysicianProtocol.body_part.ilike(body_part)
     )
 
-    # 2. Issue Type Constraint Rule
-    # If a doctor only lists "General" for a body part, they do NOT handle specialized issues
-    # If the patient is calling about a fracture/sports medicine, they must explicitly match it
-    if issue_type.lower() != 'general':
-        query = query.filter(PhysicianProtocol.issue_type.ilike(issue_type))
-    else:
-        query = query.filter(PhysicianProtocol.issue_type.ilike('general'))
+    if location:
+        slot_query = slot_query.filter(AvailabilitySlot.location == location)
 
-    # 3. New Patient Constraint Rule
-    if is_new_patient:
-        query = query.filter(Doctor.accepts_new_patients == True)
+    all_potential_slots = slot_query.all()
+    final_slots = []
 
-    return query.order_by(AvailabilitySlot.start_time.asc()).all()
+    for slot in all_potential_slots:
+        doctor = slot.doctor
+        if patient.is_new_patient and doctor.accepts_new_patients:
+            final_slots.append(slot)
+
+    return final_slots

@@ -1,7 +1,7 @@
 import pytest
 from flask import Flask
 from datetime import datetime, timedelta
-from api.models import db, Doctor, PhysicianProtocol, AvailabilitySlot
+from api.models import Patient, db, Doctor, PhysicianProtocol, AvailabilitySlot
 from api.routing_logic import get_valid_slots
 
 
@@ -103,8 +103,9 @@ def test_new_patient_with_specialized_fracture(app):
     to providers explicitly matching that issue type string.
     """
     with app.app_context():
+        mock_patient = Patient(name="John Doe", dob="1990-01-01", is_new_patient=True)
         slots = get_valid_slots(
-            body_part="Knee", issue_type="Fracture", is_new_patient=True
+            patient=mock_patient, body_part="Knee", issue_type="Fracture"
         )
 
         assert len(slots) == 1
@@ -118,8 +119,10 @@ def test_overlapping_sports_medicine_rules_returns_all_matches(app):
     all qualified physicians, properly sorted chronologically.
     """
     with app.app_context():
+        mock_patient = Patient(name="John Doe", dob="1992-05-12", is_new_patient=True)
+
         slots = get_valid_slots(
-            body_part="Knee", issue_type="Sports Medicine", is_new_patient=True
+            patient=mock_patient, body_part="Knee", issue_type="Sports Medicine"
         )
 
         # Expected: 2 slots from Dr. Chen (9:00, 14:00) + 1 slot from Dr. Walsh (10:00)
@@ -136,8 +139,10 @@ def test_new_patient_constraint_screens_out_closed_panels(app):
     are filtered out if the call flow identifies the caller as a New Patient.
     """
     with app.app_context():
+        mock_patient = Patient(name="John Lennon", dob="1969-04-20", is_new_patient=True)
+
         slots = get_valid_slots(
-            body_part="Hip", issue_type="Joint Replacement", is_new_patient=True
+            patient=mock_patient, body_part="Hip", issue_type="Joint Replacement"
         )
 
         # Dr. Patel and Dr. Chen both do Hip Joints, but Dr. Patel is closed to new patients.
@@ -155,8 +160,10 @@ def test_specialized_complaint_is_blocked_from_general_only_slots(app):
     """
     with app.app_context():
         # Dr. Patel treats Spine, but only for "General" pain/consultations.
+        mock_patient = Patient(name="David Bowie", dob="1969-04-20", is_new_patient=True)
+
         slots = get_valid_slots(
-            body_part="Spine", issue_type="Fracture", is_new_patient=True
+            patient=mock_patient, body_part="Spine", issue_type="Fracture"
         )
 
         assert len(slots) == 0
