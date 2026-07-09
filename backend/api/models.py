@@ -44,6 +44,9 @@ class Appointment(db.Model):
     doctor_id = db.Column(db.Integer, db.ForeignKey('doctors.id'), nullable=False)
     reason = db.Column(db.String(200), nullable=False)
 
+    doctor = db.relationship('Doctor', backref=db.backref('appointments', lazy=True))
+    slot = db.relationship('AvailabilitySlot', backref=db.backref('appointments', lazy=True))
+
 class CallLog(db.Model):
     __tablename__ = 'call_logs'
     id = db.Column(db.Integer, primary_key=True)
