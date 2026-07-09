@@ -120,3 +120,32 @@ def get_patient_appointments(patient_id):
             for appt in appointments
         ]
     ), 200
+
+
+@app.route("/logs", methods=["POST"])
+def log_call():
+    data = request.json or {}
+    log = CallLog(
+        transcript=data.get('transcript', ''),
+        booking_status=data.get('booking_status', 'failed'),
+        patient_id=data.get('patient_id')
+    )
+    db.session.add(log)
+    db.session.commit()
+    return jsonify({"status": "logged"}), 201
+
+
+@app.route('/logs', methods=['GET'])
+def get_logs():
+    logs = CallLog.query.all()
+    return jsonify([{
+        "id": log.id,
+        "transcript": log.transcript,
+        "booking_status": log.booking_status,
+        "patient_id": log.patient_id
+    } for log in logs]), 200
+
+if __name__ == '__main__':
+    with app.app_context():
+        db.create_all()
+    app.run(host='0.0.0.0', port=5000)
