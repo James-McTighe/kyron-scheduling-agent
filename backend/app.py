@@ -58,19 +58,25 @@ def get_slots():
 
     slots = get_valid_slots(patient, body_part, issue_type, location)
 
-    return jsonify([{
-        "id": slot.id,
-        "doctor_name": slot.doctor.name,
-        "start_time": slot.start_time,
-        "location": slot.location
-    } for slot in slots]), 200
+    return jsonify(
+        [
+            {
+                "id": slot.id,
+                "doctor_name": slot.doctor.name,
+                "start_time": slot.start_time,
+                "location": slot.location,
+            }
+            for slot in slots
+        ]
+    ), 200
 
-@app.route('/appointments', methods=['POST'])
+
+@app.route("/appointments", methods=["POST"])
 def book_appointment():
     data = request.json or {}
-    patient_id = data.get('patient_id')
-    slot_id = data.get('slot_id')
-    reason = data.get('reason', '')
+    patient_id = data.get("patient_id")
+    slot_id = data.get("slot_id")
+    reason = data.get("reason", "")
 
     if not patient_id or not slot_id:
         return jsonify({"error": "Missing patient_id or slot_id"}), 400
@@ -81,19 +87,36 @@ def book_appointment():
 
     slot.is_booked = True
     appointment = Appointment(
-        patient_id=patient_id,
-        slot_id=slot_id,
-        doctor_id=slot.doctor_id,
-        reason=reason
+        patient_id=patient_id, slot_id=slot_id, doctor_id=slot.doctor_id, reason=reason
     )
 
     db.session.add(appointment)
     db.session.commit()
 
-    return jsonify({
-        "appointment_id": appointment.id,
-        "doctor_name": slot.doctor.name,
-        "location": slot.location,
-        "start_time": slot.start_time,
-        "status": "confirmed"
-    }), 201
+    return jsonify(
+        {
+            "appointment_id": appointment.id,
+            "doctor_name": slot.doctor.name,
+            "location": slot.location,
+            "start_time": slot.start_time,
+            "status": "confirmed",
+        }
+    ), 201
+
+
+@app.route("/appointments/<int:patient_id>", methods=["GET"])
+def get_patient_appointments(patient_id):
+    appointments = Appointment.query.filter_by(patient_id=patient_id).all()
+
+    return jsonify(
+        [
+            {
+                "id": appt.id,
+                "doctor_name": appt.doctor.name,
+                "location": appt.slot.location,
+                "start_time": appt.slot.start_time,
+                "reason": appt.reason,
+            }
+            for appt in appointments
+        ]
+    ), 200
