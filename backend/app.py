@@ -30,16 +30,17 @@ def handle_patient():
             }
         ), 200
 
-    new_patient = Patient(name=name, dob=dob, is_new_patient=True)
+    else:
+        new_patient = Patient(name=name, dob=dob, is_new_patient=True)
 
-    return jsonify(
-        {
-            "id": new_patient.id,
-            "name": new_patient.name,
-            "dob": new_patient.dob,
-            "is_new_patient": True,
-        }
-    ), 201
+        return jsonify(
+            {
+                "id": new_patient.id,
+                "name": new_patient.name,
+                "dob": new_patient.dob,
+                "is_new_patient": True,
+            }
+        ), 201
 
 
 @app.route("/slots", methods=["GET"])
